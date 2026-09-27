@@ -1,0 +1,27 @@
+@import url("https://fonts.googleapis.com/css2?family=Signika+Negative:wght@300;400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-signika: "Signika Negative", sans-serif;
+}
+
+.Toastify__toast {
+  font-family: "Signika", sans-serif;
+  border-radius: 12px;
+}
+
+.Toastify__toast--success {
+  background: #974FD0;
+}
+
+.Toastify__toast--error {
+  background: #974FD0;
+}
+
+.Toastify__progress-bar {
+  background: white;
+}
+
+.Toastify__close-button {
+  color: white;
+}
