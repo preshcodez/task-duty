@@ -7,12 +7,21 @@ import can from "../assets/fluent_delete-24-regular.svg";
 import { useTasks } from "../context/TaskContext";
 import { searchTasks } from "../services/taskSearch";
 
+type SearchResultTask = {
+  id?: number;
+  _id?: string;
+  title: string;
+  description: string;
+  dueDate: string;
+  category: "Work" | "Personal" | "Urgent";
+  completed: boolean;
+};
+
 const AllPage = () => {
   const { tasks, deleteTask } = useTasks();
+
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<
-    Awaited<ReturnType<typeof searchTasks>>
-  >([]);
+  const [searchResults, setSearchResults] = useState<SearchResultTask[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -54,7 +63,7 @@ const AllPage = () => {
 
       const results = await searchTasks(search.trim());
 
-      setSearchResults(results);
+      setSearchResults(results as SearchResultTask[]);
 
       if (results.length === 0) {
         toast("No tasks found");
@@ -110,7 +119,6 @@ const AllPage = () => {
           Search Tasks
         </p>
 
-        {/* Search button inside the input */}
         <div className="flex w-full max-w-125 items-center gap-2 rounded-xl border border-[#974FD0] bg-[#FAF9FB] p-1.5 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-[#974FD0]/20">
           <input
             type="text"
@@ -251,94 +259,111 @@ const AllPage = () => {
       {/* Tasks */}
       <div className="mt-13.25 flex flex-col gap-13 max-md:mt-10 max-md:gap-8">
         {search.trim() ? (
-          searchResults.length === 0 ? (
+          isSearching ? (
             <p className="font-signika text-[20px] text-[#292929] max-md:text-[18px]">
-              {isSearching ? "Searching for tasks..." : "No tasks found."}
+              Searching for tasks...
+            </p>
+          ) : searchResults.length === 0 ? (
+            <p className="font-signika text-[20px] text-[#292929] max-md:text-[18px]">
+              No tasks found.
             </p>
           ) : (
-            searchResults.map((task) => (
-              <div
-                key={"_id" in task ? task._id : task.id}
-                className="rounded-lg border border-gray-200 bg-white px-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg max-md:px-4"
-              >
-                {/* Category & Actions */}
-                <div className="flex items-center justify-between border-b border-[#B8B6B6] py-5 max-md:flex-col max-md:items-start max-md:gap-5">
-                  <span
-                    className={`pt-11 font-signika text-[24px] font-normal max-md:pt-0 max-md:text-[20px] ${
-                      task.category === "Urgent"
-                        ? "text-red-500"
-                        : task.category === "Work"
-                          ? "text-purple-500"
-                          : "text-emerald-500"
-                    }`}
-                  >
-                    {task.category}
-                  </span>
+            searchResults.map((task) => {
+              const taskKey = task._id ?? task.id ?? "";
+              const taskId = task.id ?? task._id ?? "";
 
-                  <div className="flex gap-6 max-md:w-full">
-                    {/* Edit */}
-                    <Link
-                      to={`/task/${"id" in task ? task.id : task._id}`}
-                      className="flex w-31.5 items-center justify-center gap-1 rounded bg-[#974FD0] py-1.5 text-[24px] text-white no-underline transition hover:bg-purple-700 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
+              return (
+                <div
+                  key={taskKey}
+                  className="rounded-lg border border-gray-200 bg-white px-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg max-md:px-4"
+                >
+                  {/* Category & Actions */}
+                  <div className="flex items-center justify-between border-b border-[#B8B6B6] py-5 max-md:flex-col max-md:items-start max-md:gap-5">
+                    <span
+                      className={`pt-11 font-signika text-[24px] font-normal max-md:pt-0 max-md:text-[20px] ${
+                        task.category === "Urgent"
+                          ? "text-red-500"
+                          : task.category === "Work"
+                            ? "text-purple-500"
+                            : "text-emerald-500"
+                      }`}
                     >
-                      <FiEdit />
-                      <span>Edit</span>
-                    </Link>
+                      {task.category}
+                    </span>
 
-                    {/* Delete */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTaskToDelete("id" in task ? task.id : null);
-                        setShowDeleteModal(true);
-                      }}
-                      className="flex w-37.75 cursor-pointer items-center justify-center gap-1 rounded border border-purple-600 py-1.5 text-[24px] text-purple-600 transition hover:bg-purple-50 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
-                    >
-                      <img src={can} alt="Delete" className="w-6 max-md:w-5" />
-                      Delete
-                    </button>
-                  </div>
-                </div>
-
-                {/* Task Details */}
-                <div className="flex flex-col gap-2 pt-3.25 max-md:pt-4">
-                  <h2 className="font-signika text-[35px] font-normal text-[#292929] max-md:text-[28px]">
-                    {task.title}
-                  </h2>
-
-                  <p className="text-[24px] font-normal leading-relaxed text-[#737171] max-md:text-[18px]">
-                    {task.description}
-                  </p>
-
-                  {/* Due Date & Status */}
-                  <div className="mb-5 mt-4 flex items-center gap-13.25 max-md:mt-4 max-md:flex-col max-md:items-start max-md:gap-3">
-                    <div className="flex items-center gap-3.25 max-md:gap-2">
-                      <span className="font-signika text-[20px] font-normal text-[#737171] max-md:text-[17px]">
-                        Due Date:
-                      </span>
-
-                      <span className="font-signika text-[20px] font-medium text-[#292929] max-md:text-[17px]">
-                        {task.dueDate}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3.25 max-md:gap-2">
-                      <span className="font-signika text-[20px] font-normal text-[#737171] max-md:text-[17px]">
-                        Status:
-                      </span>
-
-                      <span
-                        className={`font-signika text-[20px] font-medium max-md:text-[17px] ${
-                          task.completed ? "text-green-600" : "text-red-500"
-                        }`}
+                    <div className="flex gap-6 max-md:w-full">
+                      {/* Edit */}
+                      <Link
+                        to={`/task/${taskId}`}
+                        className="flex w-31.5 items-center justify-center gap-1 rounded bg-[#974FD0] py-1.5 text-[24px] text-white no-underline transition hover:bg-purple-700 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
                       >
-                        {task.completed ? "Completed" : "Not Completed"}
-                      </span>
+                        <FiEdit />
+                        <span>Edit</span>
+                      </Link>
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (typeof task.id === "number") {
+                            setTaskToDelete(task.id);
+                            setShowDeleteModal(true);
+                          } else {
+                            toast.info("Delete this task from your task list.");
+                          }
+                        }}
+                        className="flex w-37.75 cursor-pointer items-center justify-center gap-1 rounded border border-purple-600 py-1.5 text-[24px] text-purple-600 transition hover:bg-purple-50 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
+                      >
+                        <img
+                          src={can}
+                          alt="Delete"
+                          className="w-6 max-md:w-5"
+                        />
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Task Details */}
+                  <div className="flex flex-col gap-2 pt-3.25 max-md:pt-4">
+                    <h2 className="font-signika text-[35px] font-normal text-[#292929] max-md:text-[28px]">
+                      {task.title}
+                    </h2>
+
+                    <p className="text-[24px] font-normal leading-relaxed text-[#737171] max-md:text-[18px]">
+                      {task.description}
+                    </p>
+
+                    {/* Due Date & Status */}
+                    <div className="mb-5 mt-4 flex items-center gap-13.25 max-md:mt-4 max-md:flex-col max-md:items-start max-md:gap-3">
+                      <div className="flex items-center gap-3.25 max-md:gap-2">
+                        <span className="font-signika text-[20px] font-normal text-[#737171] max-md:text-[17px]">
+                          Due Date:
+                        </span>
+
+                        <span className="font-signika text-[20px] font-medium text-[#292929] max-md:text-[17px]">
+                          {task.dueDate}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-3.25 max-md:gap-2">
+                        <span className="font-signika text-[20px] font-normal text-[#737171] max-md:text-[17px]">
+                          Status:
+                        </span>
+
+                        <span
+                          className={`font-signika text-[20px] font-medium max-md:text-[17px] ${
+                            task.completed ? "text-green-600" : "text-red-500"
+                          }`}
+                        >
+                          {task.completed ? "Completed" : "Not Completed"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )
         ) : tasks.length === 0 ? (
           <p className="font-signika text-[20px] text-[#292929] max-md:text-[18px]">
