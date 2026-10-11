@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { FaPlus, FaChevronDown } from "react-icons/fa";
+import { FaPlus, FaChevronDown, FaSearch } from "react-icons/fa";
 import { FiEdit } from "react-icons/fi";
 import { toast } from "react-toastify";
 import can from "../assets/fluent_delete-24-regular.svg";
@@ -42,6 +42,7 @@ const AllPage = () => {
     return matchesCategory && matchesStatus;
   });
 
+  // Search tasks
   const handleSearch = async () => {
     if (!search.trim()) {
       setSearchResults([]);
@@ -51,7 +52,7 @@ const AllPage = () => {
     try {
       setIsSearching(true);
 
-      const results = await searchTasks(search);
+      const results = await searchTasks(search.trim());
 
       setSearchResults(results);
 
@@ -76,7 +77,6 @@ const AllPage = () => {
   const handleDelete = () => {
     if (taskToDelete !== null) {
       deleteTask(taskToDelete);
-
       toast.success("Task deleted successfully!");
     }
 
@@ -87,8 +87,8 @@ const AllPage = () => {
   return (
     <div className="mx-42.5 pt-13.25 max-md:mx-5 max-md:pt-10">
       {/* Page Header */}
-      <div className="flex justify-between items-center max-md:gap-5">
-        <h2 className="font-signika font-medium text-[50px] text-[#292929] max-md:text-[36px]">
+      <div className="flex items-center justify-between max-md:gap-5">
+        <h2 className="font-signika text-[50px] font-medium text-[#292929] max-md:text-[36px]">
           My Tasks
         </h2>
 
@@ -98,18 +98,20 @@ const AllPage = () => {
         >
           <FaPlus className="w-4.5 text-[#974FD0] max-md:w-3.5" />
 
-          <span className="font-signika font-medium text-[24px] text-[#974FD0] max-md:text-[18px]">
+          <span className="font-signika text-[24px] font-medium text-[#974FD0] max-md:text-[18px]">
             Add New Task
           </span>
         </Link>
       </div>
+
       {/* Search */}
       <div className="mt-8 max-md:mt-7">
         <p className="mb-3 font-signika text-[18px] font-medium text-[#292929]">
           Search Tasks
         </p>
 
-        <div className="flex gap-3 max-md:flex-col">
+        {/* Search button inside the input */}
+        <div className="flex w-full max-w-125 items-center gap-2 rounded-xl border border-[#974FD0] bg-[#FAF9FB] p-1.5 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-[#974FD0]/20">
           <input
             type="text"
             value={search}
@@ -121,22 +123,33 @@ const AllPage = () => {
                 setSearchResults([]);
               }
             }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
             placeholder="Search by title or description..."
-            className="w-full max-w-125 rounded-lg border border-[#974FD0] bg-[#FAF9FB] px-4 py-3 font-signika text-[18px] text-[#292929] outline-none placeholder:text-[#737171] focus:bg-white max-md:text-[17px]"
+            className="min-w-0 flex-1 bg-transparent px-3 py-3 font-signika text-[18px] text-[#292929] outline-none placeholder:text-[#737171] max-md:text-[16px]"
           />
 
           <button
             type="button"
             onClick={handleSearch}
-            className="rounded-lg bg-[#974FD0] px-8 py-3 font-signika text-[18px] text-white cursor-pointer transition hover:bg-purple-700 max-md:w-full"
+            disabled={isSearching || !search.trim()}
+            aria-label="Search tasks"
+            className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#974FD0] px-5 py-3 font-signika text-[17px] font-medium text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60 max-md:px-4 max-md:text-[15px]"
           >
-            {isSearching ? "Searching..." : "Search"}
+            {isSearching ? (
+              "Searching..."
+            ) : (
+              <>
+                <FaSearch className="text-sm" />
+                <span>Search</span>
+              </>
+            )}
           </button>
         </div>
       </div>
-
-      {/* Filters */}
-      <div className="mt-8 max-md:mt-7"></div>
 
       {/* Filters */}
       <div className="mt-8 max-md:mt-7">
@@ -153,7 +166,7 @@ const AllPage = () => {
                 setCategoryOpen(!categoryOpen);
                 setStatusOpen(false);
               }}
-              className="flex w-full items-center justify-between rounded-lg border border-[#974FD0] bg-[#FAF9FB] px-4 py-3 font-signika text-[18px] text-[#292929] cursor-pointer transition hover:bg-[#F3EAF9] max-md:text-[17px]"
+              className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-[#974FD0] bg-[#FAF9FB] px-4 py-3 font-signika text-[18px] text-[#292929] transition hover:bg-[#F3EAF9] max-md:text-[17px]"
             >
               <span>
                 {categoryFilter === "All" ? "All Categories" : categoryFilter}
@@ -176,7 +189,7 @@ const AllPage = () => {
                       setCategoryFilter(option);
                       setCategoryOpen(false);
                     }}
-                    className={`block w-full px-4 py-3 text-left font-signika text-[18px] cursor-pointer transition max-md:text-[17px] ${
+                    className={`block w-full cursor-pointer px-4 py-3 text-left font-signika text-[18px] transition max-md:text-[17px] ${
                       categoryFilter === option
                         ? "bg-[#974FD0] text-white"
                         : "text-[#292929] hover:bg-[#F3EAF9]"
@@ -197,7 +210,7 @@ const AllPage = () => {
                 setStatusOpen(!statusOpen);
                 setCategoryOpen(false);
               }}
-              className="flex w-full items-center justify-between rounded-lg border border-[#974FD0] bg-[#FAF9FB] px-4 py-3 font-signika text-[18px] text-[#292929] cursor-pointer transition hover:bg-[#F3EAF9] max-md:text-[17px]"
+              className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-[#974FD0] bg-[#FAF9FB] px-4 py-3 font-signika text-[18px] text-[#292929] transition hover:bg-[#F3EAF9] max-md:text-[17px]"
             >
               <span>
                 {statusFilter === "All" ? "All Status" : statusFilter}
@@ -220,7 +233,7 @@ const AllPage = () => {
                       setStatusFilter(option);
                       setStatusOpen(false);
                     }}
-                    className={`block w-full px-4 py-3 text-left font-signika text-[18px] cursor-pointer transition max-md:text-[17px] ${
+                    className={`block w-full cursor-pointer px-4 py-3 text-left font-signika text-[18px] transition max-md:text-[17px] ${
                       statusFilter === option
                         ? "bg-[#974FD0] text-white"
                         : "text-[#292929] hover:bg-[#F3EAF9]"
@@ -236,8 +249,98 @@ const AllPage = () => {
       </div>
 
       {/* Tasks */}
-      <div className="flex flex-col gap-13 mt-13.25 max-md:gap-8 max-md:mt-10">
-        {tasks.length === 0 ? (
+      <div className="mt-13.25 flex flex-col gap-13 max-md:mt-10 max-md:gap-8">
+        {search.trim() ? (
+          searchResults.length === 0 ? (
+            <p className="font-signika text-[20px] text-[#292929] max-md:text-[18px]">
+              {isSearching ? "Searching for tasks..." : "No tasks found."}
+            </p>
+          ) : (
+            searchResults.map((task) => (
+              <div
+                key={"_id" in task ? task._id : task.id}
+                className="rounded-lg border border-gray-200 bg-white px-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg max-md:px-4"
+              >
+                {/* Category & Actions */}
+                <div className="flex items-center justify-between border-b border-[#B8B6B6] py-5 max-md:flex-col max-md:items-start max-md:gap-5">
+                  <span
+                    className={`pt-11 font-signika text-[24px] font-normal max-md:pt-0 max-md:text-[20px] ${
+                      task.category === "Urgent"
+                        ? "text-red-500"
+                        : task.category === "Work"
+                          ? "text-purple-500"
+                          : "text-emerald-500"
+                    }`}
+                  >
+                    {task.category}
+                  </span>
+
+                  <div className="flex gap-6 max-md:w-full">
+                    {/* Edit */}
+                    <Link
+                      to={`/task/${"id" in task ? task.id : task._id}`}
+                      className="flex w-31.5 items-center justify-center gap-1 rounded bg-[#974FD0] py-1.5 text-[24px] text-white no-underline transition hover:bg-purple-700 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
+                    >
+                      <FiEdit />
+                      <span>Edit</span>
+                    </Link>
+
+                    {/* Delete */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTaskToDelete("id" in task ? task.id : null);
+                        setShowDeleteModal(true);
+                      }}
+                      className="flex w-37.75 cursor-pointer items-center justify-center gap-1 rounded border border-purple-600 py-1.5 text-[24px] text-purple-600 transition hover:bg-purple-50 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
+                    >
+                      <img src={can} alt="Delete" className="w-6 max-md:w-5" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                {/* Task Details */}
+                <div className="flex flex-col gap-2 pt-3.25 max-md:pt-4">
+                  <h2 className="font-signika text-[35px] font-normal text-[#292929] max-md:text-[28px]">
+                    {task.title}
+                  </h2>
+
+                  <p className="text-[24px] font-normal leading-relaxed text-[#737171] max-md:text-[18px]">
+                    {task.description}
+                  </p>
+
+                  {/* Due Date & Status */}
+                  <div className="mb-5 mt-4 flex items-center gap-13.25 max-md:mt-4 max-md:flex-col max-md:items-start max-md:gap-3">
+                    <div className="flex items-center gap-3.25 max-md:gap-2">
+                      <span className="font-signika text-[20px] font-normal text-[#737171] max-md:text-[17px]">
+                        Due Date:
+                      </span>
+
+                      <span className="font-signika text-[20px] font-medium text-[#292929] max-md:text-[17px]">
+                        {task.dueDate}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3.25 max-md:gap-2">
+                      <span className="font-signika text-[20px] font-normal text-[#737171] max-md:text-[17px]">
+                        Status:
+                      </span>
+
+                      <span
+                        className={`font-signika text-[20px] font-medium max-md:text-[17px] ${
+                          task.completed ? "text-green-600" : "text-red-500"
+                        }`}
+                      >
+                        {task.completed ? "Completed" : "Not Completed"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )
+        ) : tasks.length === 0 ? (
           <p className="font-signika text-[20px] text-[#292929] max-md:text-[18px]">
             No tasks yet. Create your first task.
           </p>
@@ -246,15 +349,15 @@ const AllPage = () => {
             No tasks match the selected filters.
           </p>
         ) : (
-          (search.trim() ? searchResults : filteredTasks).map((task) => (
+          filteredTasks.map((task) => (
             <div
-              key={"_id" in task ? task._id : task.id}
-              className="bg-white border border-gray-200 rounded-lg px-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg max-md:px-4"
+              key={task.id}
+              className="rounded-lg border border-gray-200 bg-white px-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg max-md:px-4"
             >
               {/* Category & Actions */}
-              <div className="flex justify-between items-center py-5 border-b border-[#B8B6B6] max-md:flex-col max-md:items-start max-md:gap-5">
+              <div className="flex items-center justify-between border-b border-[#B8B6B6] py-5 max-md:flex-col max-md:items-start max-md:gap-5">
                 <span
-                  className={`text-[24px] font-normal font-signika pt-11 max-md:pt-0 max-md:text-[20px] ${
+                  className={`pt-11 font-signika text-[24px] font-normal max-md:pt-0 max-md:text-[20px] ${
                     task.category === "Urgent"
                       ? "text-red-500"
                       : task.category === "Work"
@@ -268,8 +371,8 @@ const AllPage = () => {
                 <div className="flex gap-6 max-md:w-full">
                   {/* Edit */}
                   <Link
-                    to={`/task/${"id" in task ? task.id : task._id}`}
-                    className="no-underline flex items-center gap-1 bg-[#974FD0] hover:bg-purple-700 text-white text-[24px] py-1.5 rounded transition w-31.5 justify-center max-md:flex-1 max-md:text-[18px] max-md:py-2"
+                    to={`/task/${task.id}`}
+                    className="flex w-31.5 items-center justify-center gap-1 rounded bg-[#974FD0] py-1.5 text-[24px] text-white no-underline transition hover:bg-purple-700 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
                   >
                     <FiEdit />
                     <span>Edit</span>
@@ -277,11 +380,12 @@ const AllPage = () => {
 
                   {/* Delete */}
                   <button
+                    type="button"
                     onClick={() => {
-                      setTaskToDelete("id" in task ? task.id : null);
+                      setTaskToDelete(task.id);
                       setShowDeleteModal(true);
                     }}
-                    className="flex items-center gap-1 border border-purple-600 text-purple-600 hover:bg-purple-50 text-[24px] py-1.5 rounded transition w-37.75 justify-center cursor-pointer max-md:flex-1 max-md:text-[18px] max-md:py-2"
+                    className="flex w-37.75 cursor-pointer items-center justify-center gap-1 rounded border border-purple-600 py-1.5 text-[24px] text-purple-600 transition hover:bg-purple-50 max-md:flex-1 max-md:py-2 max-md:text-[18px]"
                   >
                     <img src={can} alt="Delete" className="w-6 max-md:w-5" />
                     Delete
@@ -289,19 +393,18 @@ const AllPage = () => {
                 </div>
               </div>
 
+              {/* Task Details */}
               <div className="flex flex-col gap-2 pt-3.25 max-md:pt-4">
-                {/* Task Title */}
-                <h2 className="text-[35px] font-normal font-signika text-[#292929] max-md:text-[28px]">
+                <h2 className="font-signika text-[35px] font-normal text-[#292929] max-md:text-[28px]">
                   {task.title}
                 </h2>
 
-                {/* Task Description */}
-                <p className="text-[24px] font-normal text-[#737171] leading-relaxed max-md:text-[18px]">
+                <p className="text-[24px] font-normal leading-relaxed text-[#737171] max-md:text-[18px]">
                   {task.description}
                 </p>
 
                 {/* Due Date & Status */}
-                <div className="flex items-center gap-13.25 mt-4 mb-5 max-md:flex-col max-md:items-start max-md:gap-3 max-md:mt-4">
+                <div className="mb-5 mt-4 flex items-center gap-13.25 max-md:mt-4 max-md:flex-col max-md:items-start max-md:gap-3">
                   <div className="flex items-center gap-3.25 max-md:gap-2">
                     <span className="font-signika text-[20px] font-normal text-[#737171] max-md:text-[17px]">
                       Due Date:
@@ -333,10 +436,11 @@ const AllPage = () => {
       </div>
 
       {/* Back To Top */}
-      <div className="text-center mt-12 mb-6 max-md:mt-10">
+      <div className="mb-6 mt-12 text-center max-md:mt-10">
         <button
+          type="button"
           onClick={scrollToTop}
-          className="text-[#974FD0] hover:underline text-[26px] font-normal font-signika cursor-pointer max-md:text-[20px]"
+          className="cursor-pointer font-signika text-[26px] font-normal text-[#974FD0] hover:underline max-md:text-[20px]"
         >
           Back To Top
         </button>
@@ -357,19 +461,21 @@ const AllPage = () => {
             <div className="mt-8 flex justify-center gap-4 max-md:gap-3">
               {/* Cancel */}
               <button
+                type="button"
                 onClick={() => {
                   setShowDeleteModal(false);
                   setTaskToDelete(null);
                 }}
-                className="rounded-lg border border-[#974FD0] px-8 py-3 font-signika text-[20px] text-[#974FD0] cursor-pointer max-md:px-6 max-md:py-2.5 max-md:text-[17px]"
+                className="cursor-pointer rounded-lg border border-[#974FD0] px-8 py-3 font-signika text-[20px] text-[#974FD0] max-md:px-6 max-md:py-2.5 max-md:text-[17px]"
               >
                 Cancel
               </button>
 
               {/* Confirm Delete */}
               <button
+                type="button"
                 onClick={handleDelete}
-                className="rounded-lg bg-[#974FD0] px-8 py-3 font-signika text-[20px] text-white cursor-pointer max-md:px-6 max-md:py-2.5 max-md:text-[17px]"
+                className="cursor-pointer rounded-lg bg-[#974FD0] px-8 py-3 font-signika text-[20px] text-white max-md:px-6 max-md:py-2.5 max-md:text-[17px]"
               >
                 Delete
               </button>
