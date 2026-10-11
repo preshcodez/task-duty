@@ -60,9 +60,12 @@ export const getAllTasks = catchAsync(
         ? req.query.completed === "true"
         : undefined;
 
+    const search = req.query.search as string | undefined;
+
     const tasks = await taskService.getAllTasks(req.user._id.toString(), {
       category,
       completed,
+      search,
     });
 
     res.status(200).json({

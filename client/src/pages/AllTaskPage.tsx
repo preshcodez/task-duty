@@ -5,9 +5,15 @@ import { FiEdit } from "react-icons/fi";
 import { toast } from "react-toastify";
 import can from "../assets/fluent_delete-24-regular.svg";
 import { useTasks } from "../context/TaskContext";
+import { searchTasks } from "../services/taskSearch";
 
 const AllPage = () => {
   const { tasks, deleteTask } = useTasks();
+  const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState<
+    Awaited<ReturnType<typeof searchTasks>>
+  >([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<number | null>(null);
@@ -35,6 +41,30 @@ const AllPage = () => {
 
     return matchesCategory && matchesStatus;
   });
+
+  const handleSearch = async () => {
+    if (!search.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setIsSearching(true);
+
+      const results = await searchTasks(search);
+
+      setSearchResults(results);
+
+      if (results.length === 0) {
+        toast("No tasks found");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Unable to search tasks");
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -73,6 +103,40 @@ const AllPage = () => {
           </span>
         </Link>
       </div>
+      {/* Search */}
+      <div className="mt-8 max-md:mt-7">
+        <p className="mb-3 font-signika text-[18px] font-medium text-[#292929]">
+          Search Tasks
+        </p>
+
+        <div className="flex gap-3 max-md:flex-col">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearch(value);
+
+              if (!value.trim()) {
+                setSearchResults([]);
+              }
+            }}
+            placeholder="Search by title or description..."
+            className="w-full max-w-125 rounded-lg border border-[#974FD0] bg-[#FAF9FB] px-4 py-3 font-signika text-[18px] text-[#292929] outline-none placeholder:text-[#737171] focus:bg-white max-md:text-[17px]"
+          />
+
+          <button
+            type="button"
+            onClick={handleSearch}
+            className="rounded-lg bg-[#974FD0] px-8 py-3 font-signika text-[18px] text-white cursor-pointer transition hover:bg-purple-700 max-md:w-full"
+          >
+            {isSearching ? "Searching..." : "Search"}
+          </button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="mt-8 max-md:mt-7"></div>
 
       {/* Filters */}
       <div className="mt-8 max-md:mt-7">
@@ -182,9 +246,9 @@ const AllPage = () => {
             No tasks match the selected filters.
           </p>
         ) : (
-          filteredTasks.map((task) => (
+          (search.trim() ? searchResults : filteredTasks).map((task) => (
             <div
-              key={task.id}
+              key={"_id" in task ? task._id : task.id}
               className="bg-white border border-gray-200 rounded-lg px-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-lg max-md:px-4"
             >
               {/* Category & Actions */}
@@ -204,7 +268,7 @@ const AllPage = () => {
                 <div className="flex gap-6 max-md:w-full">
                   {/* Edit */}
                   <Link
-                    to={`/task/${task.id}`}
+                    to={`/task/${"id" in task ? task.id : task._id}`}
                     className="no-underline flex items-center gap-1 bg-[#974FD0] hover:bg-purple-700 text-white text-[24px] py-1.5 rounded transition w-31.5 justify-center max-md:flex-1 max-md:text-[18px] max-md:py-2"
                   >
                     <FiEdit />
@@ -214,7 +278,7 @@ const AllPage = () => {
                   {/* Delete */}
                   <button
                     onClick={() => {
-                      setTaskToDelete(task.id);
+                      setTaskToDelete("id" in task ? task.id : null);
                       setShowDeleteModal(true);
                     }}
                     className="flex items-center gap-1 border border-purple-600 text-purple-600 hover:bg-purple-50 text-[24px] py-1.5 rounded transition w-37.75 justify-center cursor-pointer max-md:flex-1 max-md:text-[18px] max-md:py-2"

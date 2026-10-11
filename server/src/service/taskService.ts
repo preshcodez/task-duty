@@ -37,12 +37,27 @@ export const getAllTasks = async (
   filters?: {
     category?: "Work" | "Personal" | "Urgent";
     completed?: boolean;
+    search?: string;
   },
 ) => {
   const query: {
     user: string;
     category?: "Work" | "Personal" | "Urgent";
     completed?: boolean;
+    $or?: Array<
+      | {
+          title: {
+            $regex: string;
+            $options: string;
+          };
+        }
+      | {
+          description: {
+            $regex: string;
+            $options: string;
+          };
+        }
+    >;
   } = {
     user: userId,
   };
@@ -55,6 +70,26 @@ export const getAllTasks = async (
   // Filter by completed status
   if (filters?.completed !== undefined) {
     query.completed = filters.completed;
+  }
+
+  // Search by title or description
+  if (filters?.search?.trim()) {
+    const search = filters.search.trim();
+
+    query.$or = [
+      {
+        title: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+      {
+        description: {
+          $regex: search,
+          $options: "i",
+        },
+      },
+    ];
   }
 
   return Task.find(query).sort({
